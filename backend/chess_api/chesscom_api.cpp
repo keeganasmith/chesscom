@@ -55,6 +55,16 @@ void PGN::construct_from_string(const string& pgn){
             int black_elo = stoi(pars[0]);
             this->black_elo = black_elo;
         }
+        else if(key == "TimeControl"){
+            vector<string> parsed = split_string(pars[0], '+');
+            this->total_time = stoi(parsed[0]);
+            if(parsed.size() == 2){
+                this->increment = stoi(parsed[1]);
+            }
+            else{
+                this->increment = 0;
+            }
+        }
         else if(key == "1."){
             this->moves = this->get_moves_from_string(curr_line);
         }
@@ -90,15 +100,17 @@ vector<Move> PGN::get_moves_from_string(const string& moves){
     return result;
 }
 Game::Game(){}
-Game::Game(const string& start_pos) {
+Game::Game(const string& start_pos, const string& pgn_string) {
     this->start_pos = start_pos;
+    PGN my_pgn(pgn_string);
+    this->pgn = my_pgn;
 }
 
 
 Chesscom_Client::Chesscom_Client(): cli(url){
 }
 
-void Chesscom_Client::retrieve_games(const string& user){
+vector<Game> Chesscom_Client::retrieve_games(const string& user){
     string game_endpoint = "/pub/player/" + user + "/games/";
 
     time_t t = time(nullptr);
@@ -112,22 +124,29 @@ void Chesscom_Client::retrieve_games(const string& user){
     string curr_year = to_string(current_year);
 
     game_endpoint += curr_year + "/" + curr_month;
-    auto result = Chesscom_Client::cli.Get(game_endpoint);
-    json my_json = json::parse(result->body);
+    auto api_result = Chesscom_Client::cli.Get(game_endpoint);
+    json my_json = json::parse(api_result->body);
+    vector<Game> result;
     for(int i = 0; i < my_json["games"].size(); i++){
-        PGN my_pgn(my_json["games"][i]["pgn"]);
+        Game my_game(my_json["games"][i]["initial_setup"], my_json["games"][i]["pgn"]);
+        result.push_back(my_game);
     }
-    
+    return result;
 };
 std::ostream& operator<<(std::ostream& os, const Move& myMove) {
+    
     os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.clock_time << "\n}\n";
     return os;
 }
-std::ostream& operator<<(std::ostream& os, const Game& myGame) {
-    os  << "Game: { \n"<< "start_pos: " << myGame.start_pos << "\n" << "moves: [";
-    for(int i = 0; i < myGame.moves.size()-1; i++){
-        os << myGame.moves.at(i) << ", ";
+std::ostream& operator<<(std::ostream& os, const PGN& my_pgn){
+    os << "PGN: {\n" << "event: " << my_pgn.event << "\nsite: " << my_pgn.site << "\ndate: "<< my_pgn.date << "\nwhite_player: " << my_pgn.white_player << "\nblack_player: " << my_pgn.black_player << "\ntime: " << my_pgn.time << "\nwhite_elo: " << my_pgn.white_elo << "\nblack_elo: " << my_pgn.black_elo << "\ntotal_time: " << my_pgn.total_time << "\nincrement: " << my_pgn.increment << "\nmoves: [";
+    for(int i = 0; i < my_pgn.moves.size()-1; i++){
+        os << my_pgn.moves.at(i) << ", ";
     }
-    os << myGame.moves.at(myGame.moves.size()-1) << "]\n}\n";
+    os << my_pgn.moves.at(my_pgn.moves.size()-1) << "]\n}\n";
+    return os; 
+}
+std::ostream& operator<<(std::ostream& os, const Game& myGame) {
+    os  << "Game: { \n"<< "start_pos: " << myGame.start_pos << "\n" << myGame.pgn << "\n}\n";
     return os;
 }

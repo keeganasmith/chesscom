@@ -20,7 +20,8 @@ struct PGN{
     int time;
     int white_elo;
     int black_elo;
-    string time_control;
+    int total_time;
+    int increment; 
     vector<Move> moves;
     PGN();
     PGN(const string& pgn);
@@ -29,18 +30,18 @@ struct PGN{
 };
 struct Game{
     string start_pos;
-    vector<Move> moves;
-    int time_control;
+    PGN pgn;
     Game();
-    Game(const string& start_pos);
+    Game(const string& start_pos, const string& pgn_string);
 };
 class Chesscom_Client{
     httplib::Client cli;
     
     public:
     Chesscom_Client();
-    void retrieve_games(const string& user);
+    vector<Game> retrieve_games(const string& user);
     PGN parse_pgn(const string& pgn);
 };
 std::ostream& operator<<(std::ostream& os, const Move& myMove);
 std::ostream& operator<<(std::ostream& os, const Game& myGame);
+std::ostream& operator<<(std::ostream& os, const PGN& my_pgn);
