@@ -89,15 +89,15 @@ vector<Move_LAN> PGN::get_moves_from_string(const string& moves, const string& i
             ss >> curr_word;
             Move_LAN my_move;
             Move chess_move = uci::parseSan(my_board, curr_word);
-            my_move.notation = uci::moveToLan(my_board, chess_move);
-            if(!(is_castling(my_move.notation) || is_pawn(my_move.notation)) ){
-                my_move.notation.erase(0, 1);
-            }
-            if(is_castling(my_move.notation)){
-                my_move.notation = castling_to_lan(current_fen, my_move.notation);
-            }
+            my_move.notation = uci::moveToUci(chess_move);
+            // if(!(is_castling(my_move.notation) || is_pawn(my_move.notation)) ){
+            //     my_move.notation.erase(0, 1);
+            // }
+            // if(is_castling(my_move.notation)){
+            //     my_move.notation = castling_to_lan(current_fen, my_move.notation);
+            // }
             my_board.makeMove(chess_move);
-            current_fen = my_board.getFen();
+            //current_fen = my_board.getFen();
             ss >> curr_word;
             ss >> curr_word;
             curr_word.erase(curr_word.size()-2, 2);
