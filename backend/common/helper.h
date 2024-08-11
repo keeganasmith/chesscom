@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include "chess.hpp"
 using std::string, std::vector;
 vector<string> find_strings_enclosed_in(const string& joe, char delimiter);
 int convert_time_to_int(const string& time);
@@ -19,3 +20,7 @@ std::ostream& operator<<(std::ostream& os, const vector<T>& my_vector){
     os << my_vector.at(my_vector.size()-1) << "]\n";
     return os;
 }
+bool is_castling(const string& lan);
+bool is_pawn(const string& lan);
+string retrieve_move_color_fen(const string& fen);
+string castling_to_lan(const string& fen, const string& move);

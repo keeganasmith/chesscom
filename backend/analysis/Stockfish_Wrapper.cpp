@@ -24,7 +24,9 @@ Move_Recommendation Stockfish_Wrapper::analyze_move(const Game& my_game, int num
     for(int i = 0; i < num_moves; i++){
         moves_string += my_game.pgn.moves.at(i).notation + " ";
     }
-    string position_cmd = "position startpos moves " + moves_string + "\n";
+    cout << num_moves << " moves string was: " << moves_string << "\n";
+    string position_cmd = "position fen " + my_game.start_pos + " moves " + moves_string + "\n";
+    
     fprintf(fp, "%s", position_cmd.c_str());
     string go_cmd = "go depth " + to_string(this->depth) + "\n";
     fprintf(fp, "%s", go_cmd.c_str());

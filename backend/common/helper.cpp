@@ -1,6 +1,7 @@
 #include "helper.h"
 #include <sstream>
-using std::vector, std::string, std::stringstream;
+#include <map>
+using std::vector, std::string, std::stringstream, std::map;
 vector<string> find_strings_enclosed_in(const string& joe, char delimiter){
     vector<string> result;
     string current = "";
@@ -51,4 +52,42 @@ string get_string_up_to(const string& joe, char target){
     return result;
 }
 
+bool is_castling(const string& lan){
+    if(lan.at(0) == 'O' || lan.at(0) == '0'){
+        return true;
+    }
+    return false;
+}
+bool is_pawn(const string& lan){
+    return lan.at(0) >= 97 && lan.at(0) <= 122; 
+}
+string retrieve_move_color_fen(const string& fen){
+    stringstream ss(fen);
+    string move;
+    ss >> move;
+    ss >> move;
+    if(move == "w"){
+        return "White";
+    }
+    else{
+        return "Black";
+    }
+}
 
+string castling_to_lan(const string& fen, const string& move){
+    map<string, map<string, string>> castling_map;
+    castling_map["White"] = std::map<std::string, std::string>();
+    castling_map["Black"] = std::map<std::string, std::string>();
+    
+    castling_map["White"]["Queen"] = "e1c1";
+    castling_map["White"]["King"] = "e1g1";
+    castling_map["Black"]["Queen"] = "e8c8";
+    castling_map["Black"]["King"] = "e8g8";
+    string type = "Queen";
+    if(move == "O-O" || move == "0-0"){
+        type = "King";
+    }
+    string color = retrieve_move_color_fen(fen);
+    return castling_map[color][type];
+
+}

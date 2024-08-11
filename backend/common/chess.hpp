@@ -4179,7 +4179,6 @@ class uci {
 
         constexpr auto pt_to_pgt      = [](PieceType pt) { return 1 << (pt); };
         const SanMoveInformation info = parseSanInfo<PEDANTIC>(san);
-
         if (info.capture) {
             movegen::legalmoves<movegen::MoveGenType::CAPTURE>(moves, board, pt_to_pgt(info.piece));
         } else {
@@ -4191,6 +4190,7 @@ class uci {
                 if (move.typeOf() == Move::CASTLING) {
                     if ((info.castling_short && move.to() > move.from()) ||
                         (info.castling_long && move.to() < move.from())) {
+                        //std::cout << move << "\n";
                         return move;
                     }
                 }

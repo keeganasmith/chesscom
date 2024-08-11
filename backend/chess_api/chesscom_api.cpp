@@ -4,11 +4,14 @@
 #include "../common/helper.h"
 using std::time_t, std::tm, std::time, std::localtime, std::to_string, std::string, std::stringstream;
 using json = nlohmann::json;
+using chess::Board, chess::Move, chess::uci;
+
 PGN::PGN(){}
-PGN::PGN(const string& pgn){
-    this->construct_from_string(pgn);
+PGN::PGN(const string& pgn, const string& initial_fen){
+    
+    this->construct_from_string(pgn, initial_fen);
 }
-void PGN::construct_from_string(const string& pgn){
+void PGN::construct_from_string(const string& pgn, const string& initial_fen){
     stringstream ss(pgn);
     string curr_line;
     while(getline(ss, curr_line)){
@@ -66,15 +69,17 @@ void PGN::construct_from_string(const string& pgn){
             }
         }
         else if(key == "1."){
-            this->moves = this->get_moves_from_string(curr_line);
+            this->moves = this->get_moves_from_string(curr_line, initial_fen);
         }
     }
 }
-vector<Move> PGN::get_moves_from_string(const string& moves){
+vector<Move_LAN> PGN::get_moves_from_string(const string& moves, const string& initial_fen){
     int i = 0;
     stringstream ss(moves);
     string curr_word;
-    vector<Move> result;
+    vector<Move_LAN> result;
+    string current_fen = initial_fen;
+    Board my_board(current_fen);
     while(ss >> curr_word){
         while(true){
             if(curr_word.find('.') == string::npos){
@@ -82,8 +87,17 @@ vector<Move> PGN::get_moves_from_string(const string& moves){
             }
             int move_num = stoi(get_string_up_to(curr_word, '.'));
             ss >> curr_word;
-            Move my_move;
-            my_move.notation = curr_word;
+            Move_LAN my_move;
+            Move chess_move = uci::parseSan(my_board, curr_word);
+            my_move.notation = uci::moveToLan(my_board, chess_move);
+            if(!(is_castling(my_move.notation) || is_pawn(my_move.notation)) ){
+                my_move.notation.erase(0, 1);
+            }
+            if(is_castling(my_move.notation)){
+                my_move.notation = castling_to_lan(current_fen, my_move.notation);
+            }
+            my_board.makeMove(chess_move);
+            current_fen = my_board.getFen();
             ss >> curr_word;
             ss >> curr_word;
             curr_word.erase(curr_word.size()-2, 2);
@@ -102,7 +116,7 @@ vector<Move> PGN::get_moves_from_string(const string& moves){
 Game::Game(){}
 Game::Game(const string& start_pos, const string& pgn_string) {
     this->start_pos = start_pos;
-    PGN my_pgn(pgn_string);
+    PGN my_pgn(pgn_string, start_pos);
     this->pgn = my_pgn;
 }
 
@@ -122,22 +136,17 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user){
     }
     int current_year = now->tm_year + 1900;
     string curr_year = to_string(current_year);
-
     game_endpoint += curr_year + "/" + curr_month;
     auto api_result = Chesscom_Client::cli.Get(game_endpoint);
     json my_json = json::parse(api_result->body);
     vector<Game> result;
     for(int i = 0; i < my_json["games"].size(); i++){
-        string initial_setup;
-        string setup_string = my_json["games"][i]["initial_setup"];
-        stringstream ss(setup_string);
-        ss >> initial_setup;
-        Game my_game(initial_setup, my_json["games"][i]["pgn"]);
+        Game my_game(my_json["games"][i]["initial_setup"], my_json["games"][i]["pgn"]);
         result.push_back(my_game);
     }
     return result;
 };
-std::ostream& operator<<(std::ostream& os, const Move& myMove) {
+std::ostream& operator<<(std::ostream& os, const Move_LAN& myMove) {
     
     os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.clock_time << "\n}\n";
     return os;
