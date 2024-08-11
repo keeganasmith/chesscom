@@ -40,3 +40,14 @@ int convert_time_to_int(const string& time){
     int seconds = stoi(parsed[2]);
     return hours * 3600 + minutes * 60 + seconds;
 }
+string get_string_up_to(const string& joe, char target){
+    string result = "";
+    for(int i = 0; i < joe.size(); i++){
+        if(joe.at(i) == target){
+            break;
+        }
+        result.push_back(joe.at(i));
+    }
+    return result;
+}
+

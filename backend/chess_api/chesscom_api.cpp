@@ -23,7 +23,6 @@ void PGN::construct_from_string(const string& pgn){
         if(curr_line.at(curr_line.size()-1) == ']'){
             curr_line.erase(curr_line.size()-1, 1);
         }
-        cout << curr_line << "\n";
         stringstream ss(curr_line);
         string key;
         ss >> key;
@@ -46,9 +45,49 @@ void PGN::construct_from_string(const string& pgn){
         else if(key == "UTCTime"){
             string pretty_time = pars[0];
             int int_time = convert_time_to_int(pretty_time);
-            //cout << int_time << "\n";
+            this->time = int_time;
+        }
+        else if(key == "WhiteElo"){
+            int white_elo = stoi(pars[0]);
+            this->white_elo = white_elo;
+        }
+        else if(key == "BlackElo"){
+            int black_elo = stoi(pars[0]);
+            this->black_elo = black_elo;
+        }
+        else if(key == "1."){
+            this->moves = this->get_moves_from_string(curr_line);
         }
     }
+}
+vector<Move> PGN::get_moves_from_string(const string& moves){
+    int i = 0;
+    stringstream ss(moves);
+    string curr_word;
+    vector<Move> result;
+    while(ss >> curr_word){
+        while(true){
+            if(curr_word.find('.') == string::npos){
+                break;
+            }
+            int move_num = stoi(get_string_up_to(curr_word, '.'));
+            ss >> curr_word;
+            Move my_move;
+            my_move.notation = curr_word;
+            ss >> curr_word;
+            ss >> curr_word;
+            curr_word.erase(curr_word.size()-2, 2);
+            vector<string> split = split_string(curr_word, ':');
+            int hours = stoi(split[0]);
+            int minutes = stoi(split[1]);
+            double seconds = stod(split[2]);
+            double total_seconds = (double)hours * 3600.0 + (double)minutes * 60.0 + seconds;
+            my_move.clock_time = total_seconds;
+            result.push_back(my_move);
+            ss >> curr_word;
+        }
+    }
+    return result;
 }
 Game::Game(){}
 Game::Game(const string& start_pos) {
@@ -78,11 +117,10 @@ void Chesscom_Client::retrieve_games(const string& user){
     for(int i = 0; i < my_json["games"].size(); i++){
         PGN my_pgn(my_json["games"][i]["pgn"]);
     }
-    //cout << my_json["games"][0]["pgn"] << "\n";
     
 };
 std::ostream& operator<<(std::ostream& os, const Move& myMove) {
-    os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.time_taken << "\n}\n";
+    os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.clock_time << "\n}\n";
     return os;
 }
 std::ostream& operator<<(std::ostream& os, const Game& myGame) {

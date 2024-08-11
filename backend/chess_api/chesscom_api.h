@@ -9,7 +9,7 @@ using std::string, std::cout, std::vector;
 const string url = "https://api.chess.com";
 struct Move{
     string notation;
-    double time_taken;
+    double clock_time;
 };
 struct PGN{
     string event;
@@ -25,10 +25,12 @@ struct PGN{
     PGN();
     PGN(const string& pgn);
     void construct_from_string(const string& pgn);
+    vector<Move> get_moves_from_string(const string& moves);
 };
 struct Game{
     string start_pos;
     vector<Move> moves;
+    int time_control;
     Game();
     Game(const string& start_pos);
 };
