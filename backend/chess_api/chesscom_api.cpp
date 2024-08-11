@@ -128,7 +128,11 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user){
     json my_json = json::parse(api_result->body);
     vector<Game> result;
     for(int i = 0; i < my_json["games"].size(); i++){
-        Game my_game(my_json["games"][i]["initial_setup"], my_json["games"][i]["pgn"]);
+        string initial_setup;
+        string setup_string = my_json["games"][i]["initial_setup"];
+        stringstream ss(setup_string);
+        ss >> initial_setup;
+        Game my_game(initial_setup, my_json["games"][i]["pgn"]);
         result.push_back(my_game);
     }
     return result;
