@@ -28,5 +28,9 @@
 		"typescript-eslint": "^8.0.0",
 		"vite": "^5.0.3"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"chess.js": "^1.0.0-beta.8",
+		"svelte-chessground-ui": "^1.0.1"
+	}
 }
