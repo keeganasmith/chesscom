@@ -1,6 +1,5 @@
 #include "analysis/Stockfish_Wrapper.h"
-
-int main(){
+void test(){
     cout << "got here\n";
     Chesscom_Client client;
     cout << "got here2\n";
@@ -17,4 +16,7 @@ int main(){
         }
     }
     cout << result;
+}
+int main(){
+    test();
 }

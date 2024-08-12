@@ -4,7 +4,7 @@
 using std::runtime_error, std::to_string, std::stringstream, std::array;
 const int num_threads = 12;
 Move_Recommendation::Move_Recommendation(){}
-Stockfish_Wrapper::Stockfish_Wrapper(): depth(18){
+Stockfish_Wrapper::Stockfish_Wrapper(): depth(20){
     int to_stockfish[2];
     int from_stockfish[2];
     cout << std::flush;
