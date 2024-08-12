@@ -1,8 +1,11 @@
 #include "analysis/Stockfish_Wrapper.h"
 
 int main(){
+    cout << "got here\n";
     Chesscom_Client client;
+    cout << "got here2\n";
     vector<Game> games = client.retrieve_games("mypasswordisreally");
+    cout << "got here1";
     Stockfish_Wrapper my_wrapper;
     //Move_Recommendation result = my_wrapper.analyze_move(games[0], games[0].pgn.moves.size());
     //cout << result << "\n";

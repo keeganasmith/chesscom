@@ -144,6 +144,7 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user){
         Game my_game(my_json["games"][i]["initial_setup"], my_json["games"][i]["pgn"]);
         result.push_back(my_game);
     }
+    cout << "reached end of chesscum client\n";
     return result;
 };
 std::ostream& operator<<(std::ostream& os, const Move_LAN& myMove) {

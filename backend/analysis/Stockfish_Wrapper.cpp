@@ -1,24 +1,69 @@
 #include "Stockfish_Wrapper.h"
 #include <stdexcept>
 #include <sstream>
-using std::runtime_error, std::to_string, std::stringstream;
+using std::runtime_error, std::to_string, std::stringstream, std::array;
 const int num_threads = 12;
 Move_Recommendation::Move_Recommendation(){}
 Stockfish_Wrapper::Stockfish_Wrapper(): depth(18){
-    this->fp = popen("stockfish", "r+");
-    if(fp == nullptr){
-        throw runtime_error("Unable to run stockfish");
+    int to_stockfish[2];
+    int from_stockfish[2];
+    cout << std::flush;
+    if(pipe(to_stockfish) == -1 || pipe(from_stockfish) == -1){
+        perror("couldn't create pipes");
+        throw runtime_error("couldn't create pipes");
     }
-    string set_threads_cmd = "setoption name Threads value " + to_string(num_threads) + "\n";
-    fprintf(fp, "uci\n");
-    fprintf(fp, "%s", set_threads_cmd.c_str());
-    fflush(fp);
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork");
+        throw runtime_error("Unable to fork process");
+    }
+    if(pid == 0){
+        dup2(to_stockfish[0], STDIN_FILENO);
+        dup2(from_stockfish[1], STDOUT_FILENO);
+
+        close(to_stockfish[1]);
+        close(from_stockfish[0]);
+
+        execlp("stockfish", "stockfish", nullptr);
+        perror("execlp");
+        exit(1);
+    }
+    else{
+        close(to_stockfish[0]);
+        close(from_stockfish[1]);
+
+        this->stockfish_in = to_stockfish[1];
+        this->stockfish_out = from_stockfish[0];
+
+        string set_threads_cmd = "setoption name Threads value " + to_string(num_threads) + "\n";
+        write_to_stockfish("uci\n");
+        write_to_stockfish(set_threads_cmd);
+    }
 }
 
 Stockfish_Wrapper::~Stockfish_Wrapper(){
-    pclose(fp);
+    close(this->stockfish_in);
+    close(this->stockfish_out);
 }
-
+void Stockfish_Wrapper::write_to_stockfish(const string& cmd){
+    if (write(stockfish_in, cmd.c_str(), cmd.size()) == -1) {
+        perror("write");
+        throw runtime_error("Failed to write to Stockfish");
+    }
+    fsync(stockfish_in);
+}
+string Stockfish_Wrapper::read_from_stockfish(){
+    array<char, BUF_SIZE> buffer;
+    string output;
+    ssize_t count;
+    while ((count = read(stockfish_out, buffer.data(), buffer.size())) > 0) {
+        output.append(buffer.data(), count);
+        if (output.find("bestmove") != string::npos) {
+            break;
+        }
+    }
+    return output;
+}
 Move_Recommendation Stockfish_Wrapper::analyze_move(const Game& my_game, int num_moves){
     string moves_string = "";
     for(int i = 0; i < num_moves; i++){
@@ -26,20 +71,13 @@ Move_Recommendation Stockfish_Wrapper::analyze_move(const Game& my_game, int num
     }
     cout << num_moves << " moves string was: " << moves_string << "\n";
     string position_cmd = "position fen " + my_game.start_pos + " moves " + moves_string + "\n";
-    
-    fprintf(fp, "%s", position_cmd.c_str());
-    string go_cmd = "go depth " + to_string(this->depth) + "\n";
-    fprintf(fp, "%s", go_cmd.c_str());
-    fflush(fp);
-    std::array<char, BUF_SIZE> buffer;
-    std::string intermediate;
-    while (fgets(buffer.data(), buffer.size(), fp) != nullptr) {
-        intermediate += buffer.data();
+    write_to_stockfish(position_cmd);
 
-        if(intermediate.find("bestmove") != string::npos){
-            break;
-        }
-    }
+    string go_cmd = "go depth " + to_string(this->depth) + "\n";
+    write_to_stockfish(go_cmd);
+    
+    string intermediate = read_from_stockfish();
+
     stringstream ss(intermediate);
     string curr_line;
     vector<string> lines;
