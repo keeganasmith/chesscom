@@ -1,22 +1,15 @@
+#include <crow.h>
 #include "analysis/Stockfish_Wrapper.h"
-void test(){
-    cout << "got here\n";
-    Chesscom_Client client;
-    cout << "got here2\n";
-    vector<Game> games = client.retrieve_games("mypasswordisreally");
-    cout << "got here1";
-    Stockfish_Wrapper my_wrapper;
-    //Move_Recommendation result = my_wrapper.analyze_move(games[0], games[0].pgn.moves.size());
-    //cout << result << "\n";
-    vector<Move_Recommendation> result = my_wrapper.analyze_game(games[0]);
-    for(int i = 1; i < result.size(); i++){
-        if(result.at(i).best_move == result.at(i-1).best_move){
-            cout << "issue was around move " << i << "\n";
-            break;
-        }
-    }
-    cout << result;
-}
 int main(){
-    test();
+    crow::SimpleApp app;
+    Chesscom_Client chess_com_client;
+    CROW_ROUTE(app, "/")([](){
+        return "Hello world";
+    });
+    CROW_ROUTE(app, "/retrieve_games/<string>")
+    ([&chess_com_client](string username){
+        crow::json::wvalue result = chess_com_client.retrieve_games_json(username);
+        return result;
+    });
+    app.port(18080).multithreaded().run();
 }

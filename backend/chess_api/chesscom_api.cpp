@@ -5,11 +5,34 @@
 using std::time_t, std::tm, std::time, std::localtime, std::to_string, std::string, std::stringstream;
 using json = nlohmann::json;
 using chess::Board, chess::Move, chess::uci;
-
+crow::json::wvalue Move_LAN::to_json(){
+    crow::json::wvalue result;
+    result["notation"] = this->notation;
+    result["clock_time"] = this->clock_time;
+    return result;
+}
 PGN::PGN(){}
 PGN::PGN(const string& pgn, const string& initial_fen){
     
     this->construct_from_string(pgn, initial_fen);
+}
+crow::json::wvalue PGN::to_json(){
+    crow::json::wvalue result;
+    result["event"] = this->event;
+    result["site"] = this->site;
+    result["data"] = this->date;
+    result["white_player"] = this->white_player;
+    result["black_player"] = this->black_player;
+    result["time"] = this->time;
+    result["white_elo"] = this->white_elo;
+    result["black_elo"] = this->black_elo;
+    result["total_time"] = this->total_time;
+    result["increment"] = this->increment;
+    result["moves"] = crow::json::wvalue();
+    for(int i = 0; i < this->moves.size(); i++){
+        result["moves"][i] = this->moves.at(i).to_json();
+    }
+    return result;
 }
 void PGN::construct_from_string(const string& pgn, const string& initial_fen){
     stringstream ss(pgn);
@@ -119,7 +142,12 @@ Game::Game(const string& start_pos, const string& pgn_string) {
     PGN my_pgn(pgn_string, start_pos);
     this->pgn = my_pgn;
 }
-
+crow::json::wvalue Game::to_json(){
+    crow::json::wvalue result;
+    result["start_pos"] = this->start_pos;
+    result["pgn"] = this->pgn.to_json();
+    return result;
+}
 
 Chesscom_Client::Chesscom_Client(): cli(url){
 }
@@ -147,6 +175,14 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user){
     cout << "reached end of chesscum client\n";
     return result;
 };
+crow::json::wvalue Chesscom_Client::retrieve_games_json(const string& user){
+    vector<Game> raw_result = this->retrieve_games(user);
+    crow::json::wvalue result;
+    for(int i =0; i < raw_result.size(); i++){
+        result[i] = raw_result.at(i).to_json();
+    }
+    return result;
+}
 std::ostream& operator<<(std::ostream& os, const Move_LAN& myMove) {
     
     os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.clock_time << "\n}\n";

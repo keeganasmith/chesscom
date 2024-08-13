@@ -5,8 +5,9 @@
 	import {toDests,playOtherSide} from '$lib/util.js';
     const chess = new Chess();
 	let chessground : Chessground;
-    let turnColor: string = "white"
-    
+    type Color = "white" | "black" | undefined;
+
+    let turnColor: Color = "white"
 	
 	onMount(async () => {
 		chessground.set( {
