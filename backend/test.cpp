@@ -17,6 +17,13 @@ void test(){
     }
     cout << result;
 }
+void test_retrieve_games(){
+    Chesscom_Client chess_com_client;
+    string username= "mypasswordisreally";
+    
+    crow::json::wvalue result = chess_com_client.retrieve_games_json(username, 10);
+}
 int main(){
-    test();
+    //test();
+    test_retrieve_games();
 }

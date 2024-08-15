@@ -183,6 +183,38 @@ crow::json::wvalue Chesscom_Client::retrieve_games_json(const string& user){
     }
     return result;
 }
+vector<Game> Chesscom_Client::retrieve_games(const string& user, int num_games_to_retrieve){
+    string archive_endpoint = "/pub/player/" + user + "/games/archives";
+    auto api_result = Chesscom_Client::cli.Get(archive_endpoint);
+    json archive_json = json::parse(api_result->body);
+    vector<string> game_archive_urls = archive_json["archives"];
+    vector<Game> result; 
+    for(int i = game_archive_urls.size()-1; i >= 0; i--){
+        game_archive_urls.at(i).erase(0, 21);
+        api_result = Chesscom_Client::cli.Get(game_archive_urls.at(i));
+        json game_archive_json = json::parse(api_result->body);
+        for(int i = game_archive_json["games"].size()-1; i >= 0; i--){
+            Game my_game(game_archive_json["games"][i]["initial_setup"], game_archive_json["games"][i]["pgn"]);
+            result.push_back(my_game);
+            if(result.size() >= num_games_to_retrieve){
+                break;
+            }
+        }
+        if(result.size() >= num_games_to_retrieve){
+            break;
+        }
+    }
+    cout << "size of result was: " << result.size() << "\n";
+    return result;
+}
+crow::json::wvalue Chesscom_Client::retrieve_games_json(const string& user, int num_games_to_retrieve){
+    vector<Game> raw_result = this->retrieve_games(user, num_games_to_retrieve);
+    crow::json::wvalue result;
+    for(int i =0; i < raw_result.size(); i++){
+        result[i] = raw_result.at(i).to_json();
+    }
+    return result;
+}
 std::ostream& operator<<(std::ostream& os, const Move_LAN& myMove) {
     
     os  << "Move: {\n"<< "notation: " << myMove.notation << "\n" << "time: " << myMove.clock_time << "\n}\n";

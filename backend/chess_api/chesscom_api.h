@@ -47,7 +47,9 @@ class Chesscom_Client{
     public:
     Chesscom_Client();
     vector<Game> retrieve_games(const string& user);
+    vector<Game> retrieve_games(const string& user, int num_games_to_retrieve);
     crow::json::wvalue retrieve_games_json(const string& user);
+    crow::json::wvalue retrieve_games_json(const string& user, int num_games_to_retrieve);
 };
 std::ostream& operator<<(std::ostream& os, const Move_LAN& myMove);
 std::ostream& operator<<(std::ostream& os, const Game& myGame);
