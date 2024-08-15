@@ -8,6 +8,8 @@
 #include <map>
 #include <crow.h>
 using std::string, std::cout, std::vector, std::map;
+using json = nlohmann::json;
+
 const string url = "https://api.chess.com";
 
 struct Move_LAN{
@@ -37,8 +39,11 @@ struct PGN{
 struct Game{
     string start_pos;
     PGN pgn;
+    string black_result;
+    string white_result;
     Game();
     Game(const string& start_pos, const string& pgn_string);
+    Game(const json& chess_com_json);
     crow::json::wvalue to_json();
 };
 class Chesscom_Client{

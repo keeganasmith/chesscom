@@ -1,7 +1,8 @@
 #include <crow.h>
+#include "crow/middlewares/cors.h"
 #include "analysis/Stockfish_Wrapper.h"
 int main(){
-    crow::SimpleApp app;
+    crow::App<crow::CORSHandler> app;
     Chesscom_Client chess_com_client;
     CROW_ROUTE(app, "/")([](){
         return "Hello world";

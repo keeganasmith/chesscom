@@ -20,7 +20,7 @@ crow::json::wvalue PGN::to_json(){
     crow::json::wvalue result;
     result["event"] = this->event;
     result["site"] = this->site;
-    result["data"] = this->date;
+    result["date"] = this->date;
     result["white_player"] = this->white_player;
     result["black_player"] = this->black_player;
     result["time"] = this->time;
@@ -142,10 +142,19 @@ Game::Game(const string& start_pos, const string& pgn_string) {
     PGN my_pgn(pgn_string, start_pos);
     this->pgn = my_pgn;
 }
+Game::Game(const json& chess_com_json){
+    this->start_pos = chess_com_json["initial_setup"];
+    PGN my_pgn(chess_com_json["pgn"], this->start_pos);
+    this->pgn = my_pgn;
+    this->black_result = chess_com_json["black"]["result"];
+    this->white_result = chess_com_json["white"]["result"];
+}
 crow::json::wvalue Game::to_json(){
     crow::json::wvalue result;
     result["start_pos"] = this->start_pos;
     result["pgn"] = this->pgn.to_json();
+    result["black_result"] = this->black_result;
+    result["white_result"] = this->white_result;
     return result;
 }
 
@@ -169,7 +178,7 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user){
     json my_json = json::parse(api_result->body);
     vector<Game> result;
     for(int i = 0; i < my_json["games"].size(); i++){
-        Game my_game(my_json["games"][i]["initial_setup"], my_json["games"][i]["pgn"]);
+        Game my_game(my_json["games"][i]);
         result.push_back(my_game);
     }
     cout << "reached end of chesscum client\n";
@@ -194,7 +203,8 @@ vector<Game> Chesscom_Client::retrieve_games(const string& user, int num_games_t
         api_result = Chesscom_Client::cli.Get(game_archive_urls.at(i));
         json game_archive_json = json::parse(api_result->body);
         for(int i = game_archive_json["games"].size()-1; i >= 0; i--){
-            Game my_game(game_archive_json["games"][i]["initial_setup"], game_archive_json["games"][i]["pgn"]);
+            cout << "game json looks like: " << game_archive_json["games"][i] << "\n\n";
+            Game my_game(game_archive_json["games"][i]);
             result.push_back(my_game);
             if(result.size() >= num_games_to_retrieve){
                 break;
@@ -211,6 +221,7 @@ crow::json::wvalue Chesscom_Client::retrieve_games_json(const string& user, int 
     vector<Game> raw_result = this->retrieve_games(user, num_games_to_retrieve);
     crow::json::wvalue result;
     for(int i =0; i < raw_result.size(); i++){
+        
         result[i] = raw_result.at(i).to_json();
     }
     return result;
