@@ -15,7 +15,7 @@ export function toDests(chess : Chess) {
 	});
 	return dests;
 }
-export function pawn_is_promoting(chess: Chess, orig: Square, dest: Square){
+export function pawn_is_promoting(chess: Chess, orig: string, dest: string){
 	let piece = chess.get(orig);
 	if(piece.type == "p"){
 		if(piece.color == "b"){

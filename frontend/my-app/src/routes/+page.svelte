@@ -24,6 +24,10 @@
     let username : string = "";
     let user_games: Array<Game> = [];
     let loaded_games: boolean = false;
+    let promotion_display: boolean = false;
+    let promotion_piece: string = "";
+    let orig_square: string = "";
+    let promote_square: string = "";
     type Color = "white" | "black" | undefined;
 
     let turnColor: Color = "white"
@@ -48,9 +52,31 @@
     async function select_game(index: number){
         console.log(user_games[index]);
     }
+    function promote_piece(choice: string){
+        chess.move({from: orig_square, to: promote_square, promotion: choice});
+        chessground.set({fen: chess.fen()});
+        const color = chess.turn() == 'w' ? 'white' : 'black';
+        chessground.set({
+            turnColor: color,
+            movable: {
+                color: color,
+                dests: toDests(chess)
+            }
+        });
+        promotion_display = false;
+    }
     function playOtherSide(chessground : Chessground,chess : Chess) {
         return (orig : string,dest : string) => {
-            
+            if(promotion_display){
+                chessground.set({ fen: chess.fen()});
+                return;
+            }
+            if(pawn_is_promoting(chess, orig, dest)){
+                promotion_display = true;
+                orig_square = orig;
+                promote_square = dest;
+                return;
+            }
             let chess_move = chess.move({ from: orig, to: dest });
             if (chess_move.flags === 'e') {
                 chessground.set({ fen: chess.fen() })
@@ -79,7 +105,17 @@
     
 </script>
 <div>
-    <Chessground bind:this={chessground} {turnColor}/>
+    <div id="chessboard" class="chessboard">
+        <Chessground bind:this={chessground} {turnColor}/>
+        {#if promotion_display}
+        <div id="promotion-overlay" class="overlay">
+            <button id="promote-queen" on:click={() => promote_piece('q')}>Queen</button>
+            <button id="promote-rook" on:click={() => promote_piece('r')}>Rook</button>
+            <button id="promote-bishop" on:click={() => promote_piece('b')}>Bishop</button>
+            <button id="promote-knight" on:click={() => promote_piece('k')}>Knight</button>
+        </div>
+        {/if}
+    </div>
     <label for="username">Enter your username:</label>
     <input type="text" id="username" bind:value={username}>
     <button on:click={submit_username}>Submit</button>
@@ -102,3 +138,30 @@
     </table>
     {/if}
 </div>
+<style>
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10; /* Ensure it's on top of other elements */
+    }
+
+    .overlay button {
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: white;
+        background-color: #444;
+        border: none;
+        cursor: pointer;
+    }
+    .chessboard {
+        position: relative
+    }
+</style>
