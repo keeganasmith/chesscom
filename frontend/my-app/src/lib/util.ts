@@ -15,21 +15,20 @@ export function toDests(chess : Chess) {
 	});
 	return dests;
 }
-
-// Play a move and toggle whose turn it is
-export function playOtherSide(chessground : Chessground,chess : Chess) {
-	return (orig : string,dest : string) => {
-		let chess_move = chess.move({ from: orig, to: dest });
-		if (chess_move.flags === 'e') {
-			chessground.set({ fen: chess.fen() })
-		}
-		const color = chess.turn() == 'w' ? 'white' : 'black';
-		chessground.set({
-			turnColor: color,
-			movable: {
-				color: color,
-				dests: toDests(chess)
+export function pawn_is_promoting(chess: Chess, orig: Square, dest: Square){
+	let piece = chess.get(orig);
+	if(piece.type == "p"){
+		if(piece.color == "b"){
+			if(orig[1] == "2" && dest[1] == "1"){
+				return true;
 			}
-		});
-	};
+		}
+		if(piece.color == "w"){
+			if(orig[1] == "7" && dest[1] == "8"){
+				return true;
+			}
+		}
+	}
+	return false;
 }
+// Play a move and toggle whose turn it is

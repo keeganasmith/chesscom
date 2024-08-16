@@ -32,6 +32,7 @@ struct PGN{
     vector<Move_LAN> moves;
     PGN();
     PGN(const string& pgn, const string& initial_fen);
+    PGN(const crow::json::wvalue& my_json);
     void construct_from_string(const string& pgn, const string& initial_fen);
     vector<Move_LAN> get_moves_from_string(const string& moves, const string& initial_fen);
     crow::json::wvalue to_json();
@@ -44,6 +45,7 @@ struct Game{
     Game();
     Game(const string& start_pos, const string& pgn_string);
     Game(const json& chess_com_json);
+    Game(const crow::json::wvalue& my_json);
     crow::json::wvalue to_json();
 };
 class Chesscom_Client{

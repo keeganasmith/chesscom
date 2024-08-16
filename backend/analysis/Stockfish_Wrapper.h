@@ -9,15 +9,18 @@ struct Move_Recommendation{
     double score;
     vector<string> best_line;
     Move_Recommendation();
+    crow::json::wvalue to_json();
 };
 class Stockfish_Wrapper{
     int depth;
     int stockfish_in;
     int stockfish_out;
+    Move_Recommendation parse_stockfish_output(const string& stockfish_output);
     public:
 
     Stockfish_Wrapper();
     ~Stockfish_Wrapper();
+    Move_Recommendation analyze_position(const string& fen);
     Move_Recommendation analyze_move(const Game& my_game, int num_moves);
     vector<Move_Recommendation> analyze_game(const Game& my_game);
     void write_to_stockfish(const string& cmd);

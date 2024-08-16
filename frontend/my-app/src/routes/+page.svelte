@@ -2,7 +2,7 @@
     import {Chessground} from 'svelte-chessground-ui';
     import {Chess} from 'chess.js';
 	import {onMount} from 'svelte';
-	import {toDests,playOtherSide} from '$lib/util.js';
+	import {toDests,pawn_is_promoting} from '$lib/util.js';
     import {retrieve_games} from "../common/requests"
     interface PGN {
         black_player: string;
@@ -48,6 +48,23 @@
     async function select_game(index: number){
         console.log(user_games[index]);
     }
+    function playOtherSide(chessground : Chessground,chess : Chess) {
+        return (orig : string,dest : string) => {
+            
+            let chess_move = chess.move({ from: orig, to: dest });
+            if (chess_move.flags === 'e') {
+                chessground.set({ fen: chess.fen() })
+            }
+            const color = chess.turn() == 'w' ? 'white' : 'black';
+            chessground.set({
+                    turnColor: color,
+                    movable: {
+                        color: color,
+                        dests: toDests(chess)
+                    }
+                });
+            };
+    }
 	onMount(async () => {
 		chessground.set( {
 			movable: { 
@@ -75,7 +92,7 @@
             <th>Result</th>
         </tr>
         {#each user_games as game}
-            <tr on:click={select_game(game["index"])}>
+            <tr on:click={() => select_game(game["index"])}>
                 <td>{game["opponent"]}</td>
                 <td>{game["pgn"]["date"]}</td>
                 <td>{game["pgn"]["formatted_time"]}</td>
